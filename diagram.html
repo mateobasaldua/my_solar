@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema Solar Off-Grid — Casita San Rafael</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  min-height: 100vh;
+  padding: 20px;
+  color: #fff;
+}
+
+/* ── HEADER ── */
+.header {
+  text-align: center;
+  padding: 20px 30px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 16px;
+  margin: 0 auto 18px;
+  border: 1px solid rgba(255,255,255,0.15);
+  max-width: 900px;
+}
+.header h1 { font-size: 1.75rem; color: #FFD54F; margin-bottom: 5px; }
+.header p  { font-size: 0.88rem; color: #B0BEC5; }
+
+/* ── STATUS PILLS ── */
+.status-row {
+  display: flex; gap: 9px; flex-wrap: wrap;
+  margin: 0 auto 20px; justify-content: center;
+  max-width: 900px;
+}
+.status-pill {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 30px; padding: 6px 13px;
+  font-size: 0.7rem; border: 1px solid rgba(255,255,255,0.12);
+}
+.status-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+.d-y { background:#FFD54F; } .d-b { background:#42A5F5; }
+.d-g { background:#66BB6A; } .d-r { background:#EF5350; }
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:0.5; transform:scale(1.3); }
+}
+
+/* ── SYSTEM GRID (cross layout) ── */
+.sys {
+  display: grid;
+  grid-template-columns: 195px 78px 238px 78px 195px;
+  grid-template-rows: auto 78px auto 78px auto;
+  align-items: center;
+  justify-items: center;
+  max-width: 800px;
+  margin: 0 auto 22px;
+  gap: 0;
+}
+
+/* ── CARDS ── */
+.card {
+  width: 100%; height: 100%;
+  background: rgba(255,255,255,0.07);
+  border-radius: 14px; padding: 13px;
+  border: 2px solid rgba(255,255,255,0.15);
+  transition: transform .25s, box-shadow .25s;
+  cursor: pointer; position: relative;
+}
+.card:hover { transform: translateY(-5px); box-shadow: 0 14px 40px rgba(0,0,0,0.45); }
+.hint {
+  position: absolute; top: 6px; right: 8px;
+  font-size: 0.53rem; color: rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.07);
+  padding: 2px 5px; border-radius: 8px;
+}
+.ci  { font-size: 2rem; text-align: center; margin-bottom: 6px; }
+.ct  { font-size: 0.76rem; font-weight:700; text-align:center;
+       text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+.cs  { font-size: 0.68rem; color:#CFD8DC; line-height:1.65; }
+.cs strong { color:#fff; }
+.badge {
+  display:block; text-align:center;
+  padding:3px 0; border-radius:20px;
+  font-size:0.63rem; font-weight:700; margin-top:8px; border:1px solid;
+}
+
+/* Card themes */
+.c-sol { border-color:#FFD54F; grid-column:1/6; }
+.c-inv { border-color:#42A5F5; }
+.c-bat { border-color:#66BB6A; }
+.c-cag { border-color:#FFA726; }
+.c-gen { border-color:#EF5350; grid-column:2/5; }
+
+.b-sol { background:rgba(255,213,79,.2);  color:#FFD54F; border-color:#FFD54F; }
+.b-inv { background:rgba(66,165,245,.2);  color:#42A5F5; border-color:#42A5F5; }
+.b-bat { background:rgba(102,187,106,.2); color:#66BB6A; border-color:#66BB6A; }
+.b-cag { background:rgba(255,167,38,.2);  color:#FFA726; border-color:#FFA726; }
+.b-gen { background:rgba(239,83,80,.2);   color:#EF5350; border-color:#EF5350; }
+
+/* Panels mini-grid */
+.pgrid { display:grid; grid-template-columns:repeat(6,1fr); gap:4px; margin:7px 0; }
+.pcell {
+  background:rgba(255,213,79,.15); border:1px solid rgba(255,213,79,.5);
+  border-radius:4px; padding:4px 2px;
+  font-size:0.56rem; color:#FFD54F; text-align:center; font-weight:600;
+}
+
+/* ── HORIZONTAL ARROWS ── */
+.ah {
+  display:flex; flex-direction:column;
+  align-items:center; gap:5px; width:78px;
+}
+.ah-track {
+  width:66px; height:4px; border-radius:2px;
+  position:relative; overflow:visible;
+}
+/* arrowhead right */
+.ah-track.ar::after {
+  content:''; position:absolute; right:-9px; top:-6px;
+  border-left:10px solid; border-top:8px solid transparent; border-bottom:8px solid transparent;
+}
+/* arrowhead left */
+.ah-track.al::before {
+  content:''; position:absolute; left:-9px; top:-6px;
+  border-right:10px solid; border-top:8px solid transparent; border-bottom:8px solid transparent;
+}
+.ah-lbl { font-size:0.54rem; color:#78909C; text-align:center; line-height:1.3; }
+
+/* horizontal dots */
+.dh {
+  width:8px; height:8px; border-radius:50%;
+  position:absolute; top:-2px;
+}
+.dh.dr { animation: mR 1.8s linear infinite; }
+.dh.dl { right:-8px; left:auto; animation: mL 1.8s linear infinite; }
+@keyframes mR {
+  0%   { left:0%;   opacity:0; }
+  12%  { opacity:1; }
+  88%  { opacity:1; }
+  100% { left:100%; opacity:0; }
+}
+@keyframes mL {
+  0%   { right:0%;   opacity:0; }
+  12%  { opacity:1; }
+  88%  { opacity:1; }
+  100% { right:100%; opacity:0; }
+}
+
+/* Track + head colors */
+.t-sol { background:rgba(255,213,79,.35); }
+.t-sol.ar::after  { border-left-color:#FFD54F; }
+.t-sol.down::after { border-top-color:#FFD54F; }
+
+.t-ac  { background:rgba(66,165,245,.35); }
+.t-ac.ar::after   { border-left-color:#42A5F5; }
+
+.t-bat { background:rgba(102,187,106,.35); }
+.t-bat.ar::after  { border-left-color:#66BB6A; }
+.t-bat.al::before { border-right-color:#66BB6A; }
+
+.t-gen { background:rgba(239,83,80,.35); }
+.t-gen.up::after  { border-bottom-color:#EF5350; }
+
+.dc-sol { background:#FFD54F; }
+.dc-ac  { background:#42A5F5; }
+.dc-bat { background:#66BB6A; }
+.dc-gen { background:#EF5350; }
+
+/* ── VERTICAL ARROWS ── */
+.av {
+  display:flex; flex-direction:row;
+  align-items:center; justify-content:center;
+  gap:7px; height:78px; grid-column:3;
+}
+.av-track {
+  width:4px; height:66px; border-radius:2px;
+  position:relative; overflow:visible;
+}
+.av-track.down::after {
+  content:''; position:absolute; bottom:-9px; left:-6px;
+  border-top:10px solid; border-left:8px solid transparent; border-right:8px solid transparent;
+}
+.av-track.up::after {
+  content:''; position:absolute; top:-9px; left:-6px;
+  border-bottom:10px solid; border-left:8px solid transparent; border-right:8px solid transparent;
+}
+.av-lbl { font-size:0.54rem; color:#78909C; line-height:1.3; max-width:52px; }
+
+/* vertical dots */
+.dv {
+  width:8px; height:8px; border-radius:50%;
+  position:absolute; left:-2px;
+  animation: mD 1.8s linear infinite;
+}
+.dv.up-f { bottom:-8px; top:auto; animation: mU 1.8s linear infinite; }
+@keyframes mD {
+  0%   { top:0%;    opacity:0; }
+  12%  { opacity:1; }
+  88%  { opacity:1; }
+  100% { top:100%;  opacity:0; }
+}
+@keyframes mU {
+  0%   { bottom:0%;    opacity:0; }
+  12%  { opacity:1; }
+  88%  { opacity:1; }
+  100% { bottom:100%;  opacity:0; }
+}
+
+/* ── MODAL ── */
+.overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.78); z-index:1000;
+  backdrop-filter:blur(5px);
+  align-items:center; justify-content:center;
+}
+.overlay.show { display:flex; }
+.mbox {
+  background:linear-gradient(135deg,#1a2a3a,#263040);
+  border-radius:20px; padding:26px;
+  max-width:570px; width:93%;
+  border:1px solid rgba(255,255,255,0.18);
+  position:relative; max-height:83vh; overflow-y:auto;
+  animation: mIn .22s ease-out;
+}
+@keyframes mIn {
+  from { opacity:0; transform:scale(.92) translateY(18px); }
+  to   { opacity:1; transform:scale(1)   translateY(0); }
+}
+.mclose {
+  position:absolute; top:13px; right:17px;
+  font-size:1.35rem; cursor:pointer; color:#78909C;
+  transition:color .2s; line-height:1;
+}
+.mclose:hover { color:#fff; }
+.mhead {
+  display:flex; align-items:center; gap:11px;
+  margin-bottom:16px; padding-bottom:13px;
+  border-bottom:1px solid rgba(255,255,255,0.1);
+}
+.mhead .mi2 { font-size:1.9rem; }
+.mhead h2   { font-size:1.05rem; }
+.mhead p    { font-size:0.72rem; color:#90A4AE; margin-top:2px; }
+.ms { margin-bottom:14px; }
+.ms h4 {
+  font-size:0.7rem; text-transform:uppercase;
+  letter-spacing:.5px; color:#90CAF9; margin-bottom:7px;
+}
+.ms p { font-size:0.72rem; color:#CFD8DC; line-height:1.6; }
+.mtbl { width:100%; border-collapse:collapse; }
+.mtbl td {
+  padding:5px 8px; font-size:0.72rem;
+  border-bottom:1px solid rgba(255,255,255,0.05); color:#CFD8DC;
+}
+.mtbl td:first-child { color:#fff; font-weight:600; width:46%; }
+.lgrid { display:flex; flex-wrap:wrap; gap:7px; }
+.lb {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:6px 11px; border-radius:8px;
+  font-size:0.7rem; font-weight:600;
+  text-decoration:none; border:1px solid;
+  transition:all .2s;
+}
+.lb:hover { opacity:.82; transform:translateY(-1px); }
+.lb-b { background:rgba(66,165,245,.15);  border-color:#42A5F5; color:#42A5F5; }
+.lb-g { background:rgba(102,187,106,.15); border-color:#66BB6A; color:#66BB6A; }
+.lb-y { background:rgba(255,213,79,.15);  border-color:#FFD54F; color:#FFD54F; }
+.lb-r { background:rgba(239,83,80,.15);   border-color:#EF5350; color:#EF5350; }
+.lb-p { background:rgba(171,71,188,.15);  border-color:#AB47BC; color:#AB47BC; }
+
+/* ── BOTTOM ── */
+.bw { max-width:900px; margin:0 auto; }
+.mgrid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:11px; margin-bottom:18px;
+}
+.mc {
+  background:rgba(255,255,255,0.06); border-radius:12px;
+  padding:13px 11px; border:1px solid rgba(255,255,255,0.09); text-align:center;
+}
+.mc .mci { font-size:1.7rem; margin-bottom:5px; }
+.mc h4   { font-size:0.7rem; font-weight:700; text-transform:uppercase; margin-bottom:4px; }
+.mc p    { font-size:0.65rem; color:#B0BEC5; line-height:1.5; }
+.tcol {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:14px; margin-bottom:18px;
+}
+.ic {
+  background:rgba(255,255,255,0.06); border-radius:13px;
+  padding:16px; border:1px solid rgba(255,255,255,0.1);
+}
+.ic h3 {
+  font-size:0.78rem; text-transform:uppercase; letter-spacing:.4px;
+  margin-bottom:11px; padding-bottom:7px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.ic ul { list-style:none; }
+.ic li { font-size:0.7rem; color:#CFD8DC; padding:2px 0; line-height:1.5; }
+.ic li::before { content:'▸ '; color:#42A5F5; }
+.stbl { width:100%; border-collapse:collapse; }
+.stbl th {
+  background:rgba(255,255,255,0.08); padding:6px 9px;
+  text-align:left; font-size:0.65rem;
+  text-transform:uppercase; color:#90CAF9;
+}
+.stbl td {
+  padding:6px 9px; font-size:0.71rem;
+  border-bottom:1px solid rgba(255,255,255,0.05); color:#CFD8DC;
+}
+.stbl td:first-child { color:#fff; font-weight:600; }
+.footer {
+  text-align:center; font-size:0.65rem; color:#455A64;
+  padding-top:8px; max-width:900px; margin:0 auto;
+}
+@media(max-width:820px){
+  .sys { grid-template-columns:1fr; }
+  .c-sol,.c-gen { grid-column:1; }
+  .av { grid-column:1; flex-direction:column; height:auto; }
+  .mgrid { grid-template-columns:1fr 1fr; }
+  .tcol  { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>☀️ Sistema Solar Off-Grid — Casita</h1>
+  <p>San Rafael, Mendoza · Argentina &nbsp;|&nbsp; 48V DC / 220V CA &nbsp;|&nbsp; Off-Grid 100% · Haz click en cada componente para ver detalles</p>
+</div>
+
+<!-- STATUS PILLS -->
+<div class="status-row">
+  <div class="status-pill"><div class="status-dot d-y"></div>Generación: 3.540W pico</div>
+  <div class="status-pill"><div class="status-dot d-b"></div>Inversor: 6.000W / 12.000VA</div>
+  <div class="status-pill"><div class="status-dot d-g"></div>Batería: 4,8 kWh · 6.000 ciclos</div>
+  <div class="status-pill"><div class="status-dot d-r"></div>Respaldo: 4.500W automático</div>
+  <div class="status-pill"><div class="status-dot d-b"></div>Radiación: ~6 HSP · San Rafael</div>
+</div>
+
+<!-- ═══════ SYSTEM GRID ═══════ -->
+<div class="sys">
+
+  <!-- R1: PANELS (full width) -->
+  <div class="card c-sol" onclick="openModal('panels')" style="grid-column:1/6;grid-row:1;">
+    <span class="hint">🔍 click para detalles y documentación</span>
+    <div class="ci">☀️</div>
+    <div class="ct">6 × Paneles Solares TOPCon Bifaciales</div>
+    <div class="pgrid">
+      <div class="pcell">P1<br/>590W</div><div class="pcell">P2<br/>590W</div>
+      <div class="pcell">P3<br/>590W</div><div class="pcell">P4<br/>590W</div>
+      <div class="pcell">P5<br/>590W</div><div class="pcell">P6<br/>590W</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:7px;">
+      <div class="cs"><strong>Total:</strong> 3.540W</div>
+      <div class="cs"><strong>Voc:</strong> 51,30V · <strong>Vmp:</strong> 42,67V</div>
+      <div class="cs"><strong>Isc:</strong> 14,63A · <strong>Imp:</strong> 13,83A</div>
+      <div class="cs"><strong>Efic:</strong> 22,8% · <strong>Prod:</strong> ~18 kWh/día</div>
+    </div>
+    <span class="badge b-sol">TOPCon Bifacial · Temp. trabajo: -40°C a +85°C · String 6S1P</span>
+  </div>
+
+  <!-- R2: Arrow DC down (panels → inverter) -->
+  <div class="av" style="grid-column:3;grid-row:2;">
+    <div class="av-lbl" style="text-align:right;">Cable 6mm²<br/>MC4<br/>Fusibles DC<br/>DPS DC</div>
+    <div class="av-track down t-sol">
+      <div class="dv dc-sol"></div>
+      <div class="dv dc-sol" style="animation-delay:.6s;"></div>
+      <div class="dv dc-sol" style="animation-delay:1.2s;"></div>
+    </div>
+    <div class="av-lbl">⚡ DC<br/>Alta tensión</div>
+  </div>
+
+  <!-- R3: BATTERY -->
+  <div class="card c-bat" onclick="openModal('battery')" style="grid-column:1;grid-row:3;">
+    <span class="hint">🔍 click para detalles</span>
+    <div class="ci">🔋</div>
+    <div class="ct">Pylontech US5000</div>
+    <div class="cs">
+      <strong>LiFePO4 · 48V</strong><br/>
+      Capacidad: <strong>4,8 kWh</strong><br/>
+      Útil (90%): <strong>4,3 kWh</strong><br/>
+      Corriente: 100Ah<br/>
+      Ciclos: <strong>~6.000</strong><br/>
+      Garantía: <strong>10 años</strong><br/>
+      Autonomía: <strong>~8–9h</strong><br/><br/>
+      BMS inteligente ✅<br/>
+      CAN/RS485 ✅<br/>
+      Pre-carga ✅<br/>
+      🟢🟢🟢🟢🟢 100%
+    </div>
+    <span class="badge b-bat">4,8 kWh · LiFePO4</span>
+  </div>
+
+  <!-- R3: Bidirectional arrow BAT ←→ INV -->
+  <div class="ah" style="grid-column:2;grid-row:3;">
+    <div class="ah-track ar t-bat">
+      <div class="dh dr dc-bat"></div>
+      <div class="dh dr dc-bat" style="animation-delay:.9s;"></div>
+    </div>
+    <div class="ah-track al t-bat" style="margin-top:5px;">
+      <div class="dh dl dc-bat"></div>
+      <div class="dh dl dc-bat" style="animation-delay:.9s;"></div>
+    </div>
+    <div class="ah-lbl">48V DC<br/>50mm²<br/>ANL 150A<br/>CAN/RS485</div>
+  </div>
+
+  <!-- R3: INVERTER -->
+  <div class="card c-inv" onclick="openModal('inverter')" style="grid-column:3;grid-row:3;">
+    <span class="hint">🔍 click para detalles y manuales</span>
+    <div class="ci">⚡</div>
+    <div class="ct">Growatt SPF 6000ES</div>
+    <div class="cs">
+      <strong>Inversor/Cargador Off-Grid</strong><br/>
+      Salida: <strong>6.000W</strong><br/>
+      Pico: <strong>12.000VA</strong><br/>
+      220V CA · Senoidal pura<br/>
+      Eficiencia: <strong>93%</strong><br/><br/>
+      2× MPPT · 8.000W máx<br/>
+      Rango: 120–450V DC<br/>
+      Voc máx: 500V DC<br/>
+      Cargador AC: 80A<br/>
+      Sistema batería: 48V DC<br/><br/>
+      WiFi ShinePhone ✅<br/>
+      Auto-Start Gen ✅
+    </div>
+    <span class="badge b-inv">6.000W · 48V DC</span>
+  </div>
+
+  <!-- R3: Arrow INV → CARGAS -->
+  <div class="ah" style="grid-column:4;grid-row:3;">
+    <div class="ah-track ar t-ac">
+      <div class="dh dr dc-ac"></div>
+      <div class="dh dr dc-ac" style="animation-delay:.6s;"></div>
+      <div class="dh dr dc-ac" style="animation-delay:1.2s;"></div>
+    </div>
+    <div class="ah-lbl">220V CA<br/>Protec. AC<br/>Disyuntor<br/>Diferencial</div>
+  </div>
+
+  <!-- R3: CARGAS -->
+  <div class="card c-cag" style="grid-column:5;grid-row:3;">
+    <div class="ci">🏠</div>
+    <div class="ct">Cargas Casita</div>
+    <div class="cs">
+      💡 Luces LED<br/>
+      &nbsp;100W×5h = 0,5 kWh<br/>
+      🖥️ TV + Laptops<br/>
+      &nbsp;220W×4h = 0,9 kWh<br/>
+      ❄️ Mini Heladera<br/>
+      &nbsp;100W×8h = 0,8 kWh<br/>
+      📱 Stand-by<br/>
+      &nbsp;50W×24h = 1,2 kWh<br/>
+      🔧 Soldadora Inv.<br/>
+      &nbsp;3.520W (ocasional)
+    </div>
+    <span class="badge b-cag">~3 kWh/día sin splits</span>
+  </div>
+
+  <!-- R4: Arrow CA up (generator → inverter) -->
+  <div class="av" style="grid-column:3;grid-row:4;">
+    <div class="av-lbl" style="text-align:right;">220V CA<br/>Arranque<br/>auto<br/>2 hilos</div>
+    <div class="av-track up t-gen">
+      <div class="dv dc-gen up-f"></div>
+      <div class="dv dc-gen up-f" style="animation-delay:.6s;"></div>
+      <div class="dv dc-gen up-f" style="animation-delay:1.2s;"></div>
+    </div>
+    <div class="av-lbl">CA<br/>220V</div>
+  </div>
+
+  <!-- R5: GENERATOR (centered 3 cols) -->
+  <div class="card c-gen" onclick="openModal('generator')" style="grid-column:2/5;grid-row:5;">
+    <span class="hint">🔍 click para detalles</span>
+    <div class="ci">⛽</div>
+    <div class="ct">Generador de Respaldo — Inverter Naftero 4.500W</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="cs">
+        Potencia: <strong>4.500W / 4,5kVA</strong><br/>
+        Tipo: <strong>Inverter</strong> · senoidal pura<br/>
+        Salida: 220V monofásico<br/>
+        Arranque: Eléctrico + Manual<br/>
+        Auto-Start vía Growatt ✅
+      </div>
+      <div class="cs">
+        🔴 Arrancar al: <strong>25% SoC</strong><br/>
+        🟢 Apagar al: <strong>85% SoC</strong><br/>
+        ⏱️ Mínimo: <strong>30 minutos</strong><br/>
+        🌙 Silencio: <strong>22:00–07:00</strong><br/>
+        ⏳ Carga 25→85%: <strong>~5–6 horas</strong>
+      </div>
+    </div>
+    <span class="badge b-gen">Respaldo Automático · Contacto Seco Growatt</span>
+  </div>
+
+</div><!-- end sys -->
+
+
+<!-- ═══════ BOTTOM ═══════ -->
+<div class="bw">
+
+  <!-- MODOS -->
+  <div class="mgrid">
+    <div class="mc"><div class="mci">☀️</div><h4>Día Soleado</h4>
+      <p>Paneles → Inversor → Cargas directas + carga batería. Llena en ~1,5 h.</p></div>
+    <div class="mc"><div class="mci">🌙</div><h4>Noche</h4>
+      <p>Batería → Inversor → Cargas. Autonomía ~8–9 horas sin splits.</p></div>
+    <div class="mc"><div class="mci">⛅</div><h4>Día Nublado</h4>
+      <p>Paneles reducidos + Batería → Cargas. Cubre ~3–5 kWh básicos.</p></div>
+    <div class="mc"><div class="mci">❄️</div><h4>Batería Baja</h4>
+      <p>Al 25% → Growatt arranca generador SOLO → se apaga SOLO al 85%.</p></div>
+  </div>
+
+  <!-- MONITOREO + SPECS -->
+  <div class="tcol">
+    <div class="ic">
+      <h3 style="color:#CE93D8;">📱 Monitoreo Remoto — ShinePhone</h3>
+      <ul>
+        <li>Módulo WiFi Growatt Shine (~USD 20)</li>
+        <li>App ShinePhone — gratuita, sin costo mensual</li>
+        <li>Generación solar en tiempo real (W)</li>
+        <li>Consumo actual de la casita (W)</li>
+        <li>Estado de carga batería (% SoC exacto)</li>
+        <li>Corriente de carga y descarga</li>
+        <li>Temperatura del inversor</li>
+        <li>Historial diario y mensual (kWh)</li>
+        <li>Alertas automáticas push / email</li>
+        <li>Estado del generador de respaldo</li>
+        <li>Acceso desde cualquier lugar del mundo ✅</li>
+      </ul>
+    </div>
+    <div class="ic">
+      <h3 style="color:#80CBC4;">📋 Resumen del Sistema</h3>
+      <table class="stbl">
+        <tr><th>Parámetro</th><th>Valor</th></tr>
+        <tr><td>Generación FV</td><td>3.540W / ~18 kWh/día</td></tr>
+        <tr><td>Almacenamiento</td><td>4,8 kWh (4,3 útiles)</td></tr>
+        <tr><td>Potencia inversor</td><td>6.000W / 12.000VA pico</td></tr>
+        <tr><td>Autonomía nocturna</td><td>~8–9 h (sin splits)</td></tr>
+        <tr><td>Generador respaldo</td><td>4.500W · automático</td></tr>
+        <tr><td>Voltaje sistema DC</td><td>48V DC</td></tr>
+        <tr><td>Voltaje salida AC</td><td>220V CA · Senoidal pura</td></tr>
+        <tr><td>Radiación solar</td><td>~6 HSP · San Rafael, Mza.</td></tr>
+        <tr><td>Tipo sistema</td><td>Off-Grid 100%</td></tr>
+        <tr><td>Monitoreo</td><td>ShinePhone · Acceso remoto</td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">Sistema Solar Off-Grid — Casita · San Rafael, Mendoza, Argentina · 2025</div>
+
+
+<!-- ═══════ MODAL ═══════ -->
+<div id="ov" class="overlay" onclick="closeOut(event)">
+  <div class="mbox" id="mbox">
+    <span class="mclose" onclick="closeModal()">✕</span>
+    <div id="mcontent"></div>
+  </div>
+</div>
+
+<script>
+const DATA = {
+  panels: {
+    icon:'☀️', title:'6× Paneles Solares TOPCon Bifaciales 590W',
+    sub:'Tecnología de última generación · Bifacial · String 6S1P',
+    specs:[
+      ['Potencia por panel','590W'],
+      ['Potencia total array','3.540W'],
+      ['Voltaje circuito abierto (Voc)','51,30V'],
+      ['Voltaje máx. potencia (Vmp)','42,67V'],
+      ['Corriente cortocircuito (Isc)','14,63A'],
+      ['Corriente máx. potencia (Imp)','13,83A'],
+      ['Eficiencia del módulo','22,8%'],
+      ['Temperatura de trabajo','-40°C a +85°C'],
+      ['Coef. temperatura Pmax','-0,29% / °C'],
+      ['Producción estimada San Rafael','~18 kWh/día (6 HSP)'],
+      ['Configuración string','6 paneles en serie (6S1P)'],
+      ['Voc total del string','~307,8V'],
+    ],
+    info:`<div class="ms"><h4>¿Qué es TOPCon?</h4>
+    <p>TOPCon (Tunnel Oxide Passivated Contact) es la tecnología de celda solar de última generación. 
+    Supera a PERC en eficiencia, tiene menor degradación anual y mejor rendimiento en días calurosos. 
+    La bifacialidad captura luz reflejada por la superficie trasera del panel, aumentando la producción en ~10–15%.</p></div>
+    <div class="ms"><h4>Configuración recomendada para el Growatt SPF 6000ES</h4>
+    <p>Con 6 paneles en serie (6S1P): Voc total ≈ 307,8V y Vmp ≈ 256V — perfectamente dentro del rango MPPT del Growatt (120–450V). 
+    Conectar a una de las dos entradas MPPT del inversor con cable solar 6mm² y conectores MC4.</p></div>`,
+    links:[
+      {l:'☀️ Global Solar Atlas — San Rafael',u:'https://globalsolaratlas.info/map?c=-34.617,-68.33,11',c:'lb-y'},
+      {l:'📐 Calculadora PVGIS (radiación)',u:'https://re.jrc.ec.europa.eu/pvg_tools/en/',c:'lb-b'},
+      {l:'📄 ¿Qué es TOPCon? (ES)',u:'https://es.wikipedia.org/wiki/C%C3%A9lula_solar_de_%C3%B3xido_de_t%C3%BAnel_pasivado',c:'lb-y'},
+      {l:'🔌 Calculadora string FV',u:'https://www.wholesalesolar.com/solar-information/start-here/offgrid-calculator',c:'lb-g'},
+    ]
+  },
+
+  inverter: {
+    icon:'⚡', title:'Growatt SPF 6000ES',
+    sub:'Inversor/Cargador Off-Grid 48V · 6.000W · 2× MPPT',
+    specs:[
+      ['Potencia nominal salida','6.000W'],
+      ['Potencia pico (surge)','12.000VA'],
+      ['Voltaje salida AC','220/230V CA · 50Hz'],
+      ['Tipo de onda','Senoidal pura'],
+      ['Eficiencia máxima','93%'],
+      ['Voltaje sistema batería','48V DC'],
+      ['Entradas MPPT','2 independientes'],
+      ['Potencia solar máx. entrada','8.000W'],
+      ['Rango voltaje MPPT','120V – 450V DC'],
+      ['Voc máximo FV','500V DC'],
+      ['Corriente máx. por MPPT','16A por entrada'],
+      ['Cargador AC (generador)','Hasta 80A · 230VAC'],
+      ['Rango entrada AC','170V – 280VAC'],
+      ['Auto-Start generador','Relé contacto seco ✅'],
+      ['Compatible LiFePO4','Pylontech CAN/RS485 ✅'],
+      ['Monitoreo remoto','WiFi módulo Shine'],
+    ],
+    info:`<div class="ms"><h4>📡 Módulo WiFi — Setup</h4>
+    <p>El módulo ShineWiFi-X se conecta al puerto USB del inversor. Permite monitoreo desde la app 
+    ShinePhone (iOS/Android) y el portal ShineServer. Requiere WiFi 2.4GHz y registro gratuito. 
+    Desde la app podés ver generación, consumo, estado de batería y controlar configuraciones.</p></div>
+    <div class="ms"><h4>🔋 Comunicación con Pylontech US5000</h4>
+    <p>Conectar el puerto BMS del Growatt al puerto CAN de la US5000 con cable RJ45. 
+    En el menú del inversor configurar: Tipo de batería = Pylontech / Litio. 
+    Esto permite leer el SoC exacto y optimizar la carga/descarga automáticamente.</p></div>
+    <div class="ms"><h4>⛽ Configuración Auto-Start Generador</h4>
+    <p>En el menú del Growatt: Configuration → Generator → habilitar arranque automático. 
+    Configurar SoC de arranque (25%) y parada (85%). Conectar los 2 hilos del relé "Dry Contact" 
+    del Growatt al terminal de arranque remoto del generador.</p></div>`,
+    links:[
+      {l:'📖 Manual SPF6000ES (EN)',u:'https://www.ginlong.com/Uploads/SPF6000ES_user_manual.pdf',c:'lb-b'},
+      {l:'🌐 Producto Growatt oficial',u:'https://www.growatt.com/goodshow/SPF-6000ES-Series-Off-Grid-Energy-Storage-Inverter.html',c:'lb-b'},
+      {l:'📱 ShinePhone — Android',u:'https://play.google.com/store/apps/details?id=com.ginlong.shinephone',c:'lb-g'},
+      {l:'📱 ShinePhone — iOS',u:'https://apps.apple.com/app/shinephone/id1398051282',c:'lb-g'},
+      {l:'🌐 Portal ShineServer (web)',u:'https://server.growatt.com/',c:'lb-p'},
+      {l:'📡 Módulo WiFi ShineWiFi-X',u:'https://www.growatt.com/goodshow/ShineWIFI-X.html',c:'lb-y'},
+      {l:'🎥 Setup WiFi Growatt (YouTube)',u:'https://www.youtube.com/results?search_query=growatt+shinewifi+setup+español',c:'lb-r'},
+    ]
+  },
+
+  battery: {
+    icon:'🔋', title:'Pylontech US5000',
+    sub:'Batería LiFePO4 · 48V · 100Ah · 4,8 kWh',
+    specs:[
+      ['Capacidad nominal','4,8 kWh'],
+      ['Capacidad útil (90% DoD)','~4,3 kWh'],
+      ['Voltaje nominal','48V DC'],
+      ['Corriente','100Ah'],
+      ['Profundidad de descarga','90% recomendado'],
+      ['Ciclos de vida','~6.000 ciclos'],
+      ['Garantía','10 años'],
+      ['Autonomía estimada','~8–9 horas (sin splits)'],
+      ['Protocolo comunicación','CAN Bus / RS485'],
+      ['BMS integrado','Sí ✅'],
+      ['Pre-carga (soft-start)','Sí ✅ (diferencia vs UP5000)'],
+      ['Paralelo máximo','Hasta 16 unidades US5000'],
+      ['Compatibilidad inversor','Growatt, Victron, SMA, Deye...'],
+    ],
+    info:`<div class="ms"><h4>🔌 Cableado de comunicación con Growatt</h4>
+    <p>Conectar el puerto CAN de la US5000 (puerto Maestro si hay varias) al puerto BMS del 
+    Growatt SPF 6000ES usando cable RJ45. En el menú del Growatt seleccionar: 
+    Tipo batería = Pylontech. Esto habilita el monitoreo de SoC exacto y la carga optimizada por el BMS.</p></div>
+    <div class="ms"><h4>📈 Expansión futura en paralelo</h4>
+    <p>Para ampliar la capacidad: conectar más unidades US5000 en paralelo con los cables de potencia 
+    naranja/negro incluidos. Encadenar la comunicación entre baterías (daisy-chain RJ45). 
+    La primera batería actúa como Maestra y coordina a las demás. Máximo: 16 unidades = 76,8 kWh.</p></div>`,
+    links:[
+      {l:'🌐 Pylontech US5000 — Oficial',u:'https://www.pylontech.com.cn/pro_detail.aspx?id=142',c:'lb-g'},
+      {l:'📄 Datasheet US5000 (PDF)',u:'https://www.pylontech.com.cn/upload/file/20211228/US5000%20Datasheet.pdf',c:'lb-g'},
+      {l:'📋 Lista compatibilidad inversores',u:'https://www.pylontech.com.cn/service/service_detail.aspx?id=1',c:'lb-b'},
+      {l:'📖 Manual instalación US5000',u:'https://www.pylontech.com.cn/upload/file/US5000_Installation_Manual.pdf',c:'lb-b'},
+      {l:'🎥 Setup Pylontech + Growatt (YT)',u:'https://www.youtube.com/results?search_query=pylontech+us5000+growatt+setup',c:'lb-r'},
+    ]
+  },
+
+  generator: {
+    icon:'⛽', title:'Generador Inverter Naftero 4.500W',
+    sub:'Respaldo automático · Onda senoidal pura · 220V monofásico',
+    specs:[
+      ['Potencia nominal','4.500W / 4,5 kVA'],
+      ['Tipo','Inverter (onda senoidal pura)'],
+      ['Voltaje salida','220V monofásico · 50Hz'],
+      ['Arranque','Eléctrico + Manual'],
+      ['Auto-Start (Growatt)','Relé contacto seco ✅'],
+      ['SoC de activación','25% de carga de batería'],
+      ['SoC de parada','85% de carga de batería'],
+      ['Tiempo mínimo encendido','30 minutos'],
+      ['Horario silencioso','22:00 – 07:00'],
+      ['Tiempo recarga 25%→85%','~5 a 6 horas'],
+    ],
+    info:`<div class="ms"><h4>🔌 Cómo conectar el arranque automático al Growatt</h4>
+    <p>1. Conectar salida 220V del generador → entrada AC del Growatt.<br/>
+    2. Conectar 2 hilos del relé "Dry Contact / Gen Start" del Growatt → terminal de arranque remoto del generador.<br/>
+    3. En menú Growatt: Configuration → Generator → Habilitar auto-start → configurar SoC arranque (25%) y parada (85%) → tiempo mínimo (30 min) → horario silencioso.</p></div>
+    <div class="ms"><h4>✅ Ventajas del tipo Inverter</h4>
+    <p>Los generadores tipo Inverter producen onda senoidal pura, idéntica a la red eléctrica. 
+    Esto es fundamental para no dañar el Growatt ni los equipos electrónicos. 
+    Además son significativamente más silenciosos y eficientes en combustible que los generadores convencionales, 
+    especialmente a cargas parciales.</p></div>`,
+    links:[
+      {l:'⚙️ Config. Auto-Start Growatt',u:'https://www.growatt.com/support',c:'lb-r'},
+      {l:'❓ ¿Qué es un generador Inverter?',u:'https://es.wikipedia.org/wiki/Generador_el%C3%A9ctrico',c:'lb-r'},
+      {l:'🎥 Arranque automático generador+solar (YT)',u:'https://www.youtube.com/results?search_query=generador+arranque+automatico+inversor+solar+español',c:'lb-r'},
+    ]
+  }
+};
+
+function openModal(key) {
+  const d = DATA[key];
+  if (!d) return;
+  const specs = d.specs.map(([k,v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+  const links = d.links.map(l => `<a href="${l.u}" target="_blank" class="lb ${l.c}">${l.l} ↗</a>`).join('');
+  document.getElementById('mcontent').innerHTML = `
+    <div class="mhead">
+      <span class="mi2">${d.icon}</span>
+      <div><h2>${d.title}</h2><p>${d.sub}</p></div>
+    </div>
+    <div class="ms"><h4>Especificaciones Técnicas</h4>
+      <table class="mtbl">${specs}</table></div>
+    ${d.info}
+    <div class="ms"><h4>📎 Documentación y Links Útiles</h4>
+      <div class="lgrid">${links}</div></div>`;
+  document.getElementById('ov').classList.add('show');
+}
+function closeModal() { document.getElementById('ov').classList.remove('show'); }
+function closeOut(e)  { if (e.target === document.getElementById('ov')) closeModal(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>
